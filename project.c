@@ -60,96 +60,39 @@ int instruction_decode(unsigned op,struct_controls *controls)
     memset(controls, 0, sizeof(struct_controls));
 
     switch (op) {
-        case 0b000000: // R-format
+        case 0b000000: // R-format *
             controls->RegDst = 1;
-            controls->ALUOp = 7;
+            controls->ALUOp = 0b111;
             break;
-        case 0b000001: // bltz/gez
-
-            break;
-        case 0b000010: // jump
+        case 0b000010: // jump *
             controls->Jump = 1;
             break;
-        case 0b000100: // branch eq
+        case 0b000100: // branch eq *
             controls->Branch = 1;
             break;
-        case 0b001000: // addi
-
+        case 0b001000: // addi *
+            controls->ALUOp = 0b000;
+            controls->ALUSrc = 1;
             break;
-        case 0b001001: // addiu
-
+        case 0b001010: // set less than immediate *
+            controls->ALUOp = 0b010;
+            controls->ALUSrc = 1;
             break;
-        case 0b001010: // set less than immediate
-
+        case 0b001011: // sltiu *
+            controls->ALUOp = 0b011;
+            controls->ALUSrc = 1;
             break;
-        case 0b001011: // sltiu
-
+        case 0b001111: // load upper immediately *
+            controls->MemtoReg = 1;
+            controls->ALUSrc = 1;
             break;
-        case 0b001100: // andi
-            controls->ALUOp = 0b100;
+        case 0b100011: // load word *
+            controls->MemRead = 1;
+            controls->ALUSrc = 1;
             break;
-        case 0b001101: // ori
-
-            break;
-        case 0b001110: // xori
-
-            break;
-        case 0b001111: // load upper immediately
-
-            break;
-        case 0b010000: // TLB
-
-            break;
-        case 0b010001: // FlPt
-
-            break;
-        case 0b100000: // load byte
-
-            break;
-        case 0b100001: // load half
-
-            break;
-        case 0b100010: // lwl
-
-            break;
-        case 0b100011: // load word
-
-            break;
-        case 0b100100: // lbu
-
-            break;
-        case 0b100101: // lhu
-
-            break;
-        case 0b100110: // lwr
-
-            break;
-        case 0b101000: // store byte
-
-            break;
-        case 0b101001: // store half
-
-            break;
-        case 0b101010: // swl
-
-            break;
-        case 0b101011: // store word
-
-            break;
-        case 0b101110: // swr
-
-            break;
-        case 0b110000: // lwc0
-
-            break;
-        case 0b110001: // lwc1
-
-            break;
-        case 0b111000: // swc0
-
-            break;
-        case 0b111001: // swc1
-
+        case 0b101011: // store word *
+            controls->MemWrite = 1;
+            controls->ALUSrc = 1;
             break;
         default:
             return 1;

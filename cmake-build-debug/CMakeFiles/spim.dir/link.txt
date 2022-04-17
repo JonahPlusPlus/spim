@@ -1,1 +1,0 @@
-/usr/bin/cc -g CMakeFiles/spim.dir/spimcore.c.o CMakeFiles/spim.dir/project.c.o -o spim 
