@@ -193,6 +193,11 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
+    if (memdata == NULL)
+        memdata = calloc(1, sizeof(unsigned));
+    else
+        memset(memdata, 0, sizeof(unsigned));
+
     if (ALUresult >> 2 > MEMSIZE - 1) {
         return 1;
     }
