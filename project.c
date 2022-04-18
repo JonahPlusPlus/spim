@@ -148,7 +148,7 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
     if (ALUresult == NULL)
-        ALUresult = calloc(1, sizeof(unsigned));
+        ALUresult = malloc(sizeof(unsigned));
     else
         memset(ALUresult, 0, sizeof(unsigned)); // Some paths may not call ALU, so we have to prevent corruption
 
