@@ -13,7 +13,7 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
         case 0b100: *ALUresult = A & B; break;
         case 0b101: *ALUresult = A | B; break;
         case 0b110: *ALUresult = B << 16; break;
-        case 0b111: *ALUresult = !A; break;
+        case 0b111: *ALUresult = ~A; break;
         default: break;
     }
 
@@ -57,7 +57,11 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
 /* 15 Points */
 int instruction_decode(unsigned op,struct_controls *controls)
 {
-    memset(controls, 0, sizeof(struct_controls));
+    if (controls == NULL) {
+        controls = calloc(1, sizeof(struct_controls));
+    } else {
+        memset(controls, 0, sizeof(struct_controls));
+    }
 
     switch (op) {
         case 0b000000: // R-format *
@@ -120,7 +124,36 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 /* 10 Points */
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
+    if (ALUOp < 0b111) {
+        ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+    } else if (ALUOp == 0b111) {
+        switch (funct) {
+            case 0b100000: // add
+                ALU(data1, data2, 0b000, ALUresult, Zero);
+                break;
+            case 0b100010: // subtract
+                ALU(data1, data2, 0b001, ALUresult, Zero);
+                break;
+            case 0b101010: // less than
+                ALU(data1, data2, 0b010, ALUresult, Zero);
+                break;
+            case 0b101011: // less than unsigned
+                ALU(data1, data2, 0b011, ALUresult, Zero);
+                break;
+            case 0b100100: // and
+                ALU(data1, data2, 0b100, ALUresult, Zero);
+                break;
+            case 0b100101: // or
+                ALU(data1, data2, 0b101, ALUresult, Zero);
+                break;
+            default:
+                return 1;
+        }
+    } else {
+        return 1;
+    }
 
+    return 0;
 }
 
 /* Read / Write Memory */
@@ -143,5 +176,6 @@ void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
 
+    *PC++;
 }
 
