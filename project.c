@@ -1,5 +1,8 @@
 #include "spimcore.h"
 
+#define MEMSIZE (65536 >> 2)
+#define REGSIZE 32
+#define BUFSIZE 256
 
 /* ALU */
 /* 10 Points */
@@ -160,7 +163,19 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
+    if (ALUresult >> 2 > MEMSIZE - 1) {
+        return 1;
+    }
 
+    if (MemRead == 1) {
+        *memdata = MEM(ALUresult);
+    }
+
+    if (MemWrite == 1) {
+        MEM(ALUresult) = data2;
+    }
+
+    return 0;
 }
 
 
