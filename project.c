@@ -114,9 +114,10 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 /* 10 Points */
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
-    *extended = offset
+    *extended_value = offset;
 
     if ((offset & 0x8000 )== 0x8000) {
+      *extended_value |= 0xFFFF0000;
     }
 }
 
