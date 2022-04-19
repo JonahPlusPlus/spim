@@ -114,7 +114,10 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 /* 10 Points */
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
-    
+    *extended = offset
+
+    if ((offset & 0x8000 )== 0x8000) {
+    }
 }
 
 /* ALU operations */
@@ -208,4 +211,3 @@ void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char 
         *PC++;
     }
 }
-
