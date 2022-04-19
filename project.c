@@ -45,27 +45,6 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 /* 10 Points */
 void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
 {
-    if (op == NULL)
-        op = malloc(sizeof(unsigned));
-
-    if (r1 == NULL)
-        r1 = malloc(sizeof(unsigned));
-
-    if (r2 == NULL)
-        r2 = malloc(sizeof(unsigned));
-
-    if (r3 == NULL)
-        r3 = malloc(sizeof(unsigned));
-
-    if (funct == NULL)
-        funct = malloc(sizeof(unsigned));
-
-    if (offset == NULL)
-        offset = malloc(sizeof(unsigned));
-
-    if (jsec == NULL)
-        jsec = malloc(sizeof(unsigned));
-
     *op = instruction >> 26;
     *r1 = (instruction >> 21) & 0x1F;
     *r2 = (instruction >> 16) & 0x1F;
@@ -81,12 +60,6 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
 /* 15 Points */
 int instruction_decode(unsigned op,struct_controls *controls)
 {
-    if (controls == NULL) {
-        controls = calloc(1, sizeof(struct_controls));
-    } else {
-        memset(controls, 0, sizeof(struct_controls)); // Prevents data corruption from previous cycles
-    }
-
     switch (op) {
         case 0b000000: // R-format *
             controls->RegDst = 1;
@@ -147,16 +120,6 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 /* 10 Points */
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
-    if (ALUresult == NULL)
-        ALUresult = malloc(sizeof(unsigned));
-    else
-        memset(ALUresult, 0, sizeof(unsigned)); // Some paths may not call ALU, so we have to prevent corruption
-
-    if (Zero == NULL)
-        Zero = malloc(sizeof(char));
-    else
-        memset(Zero, 0, sizeof(char));
-
     if (ALUSrc == 1) {
         ALU(data1, extended_value, ALUOp, ALUresult, Zero);
     } else if (ALUOp == 0b111) {
@@ -193,11 +156,6 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
-    if (memdata == NULL)
-        memdata = calloc(1, sizeof(unsigned));
-    else
-        memset(memdata, 0, sizeof(unsigned));
-
     if (ALUresult >> 2 > MEMSIZE - 1) {
         return 1;
     }
