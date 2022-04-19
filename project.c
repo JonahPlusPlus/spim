@@ -200,7 +200,9 @@ void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char 
     if (Jump == 1) {
         *PC = jsec;
     } else if (Branch == 1) {
-        
+        if (Zero == 1) {
+            *PC = extended_value;
+        }
     } else {
         *PC++;
     }
