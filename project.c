@@ -1,3 +1,9 @@
+// project.c
+// Team:
+// * Jonah Henriksson
+// * Asier Arambarri
+// * Jessica Solanki
+
 #include "spimcore.h"
 
 #define MEMSIZE (65536 >> 2)
@@ -11,7 +17,7 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
     switch (ALUControl) {
         case 0b000: *ALUresult = A + B; break;
         case 0b001: *ALUresult = A - B; break;
-        case 0b010: *ALUresult = ((signed)A < (signed)B) ? 1 : 0; break;
+        case 0b010: *ALUresult = (A > B) ? 1 : 0; break; // Negative numbers are "greater" than positive
         case 0b011: *ALUresult = (A < B) ? 1 : 0; break;
         case 0b100: *ALUresult = A & B; break;
         case 0b101: *ALUresult = A | B; break;
@@ -31,9 +37,13 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 /* 10 Points */
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
+    if (PC >> 2 > MEMSIZE - 1) { // check if PC is in range
+        return 1;
+    }
+
     *instruction = MEM(PC);
 
-    if (*instruction == 0) {
+    if (*instruction == 0x0 || *instruction > 0xC0000000) { // check if instruction is in range
         return 1;
     }
 
@@ -60,6 +70,8 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
 /* 15 Points */
 int instruction_decode(unsigned op,struct_controls *controls)
 {
+    memset(controls, 0, sizeof(struct_controls)); // Prevents data corruption from previous cycles
+
     switch (op) {
         case 0b000000: // R-format *
             controls->RegDst = 1;
@@ -71,28 +83,39 @@ int instruction_decode(unsigned op,struct_controls *controls)
             break;
         case 0b000100: // branch eq *
             controls->Branch = 1;
+            controls->ALUOp = 0b001;
+            controls->ALUSrc = 2;
             break;
         case 0b001000: // addi *
             controls->ALUOp = 0b000;
+            controls->RegWrite = 1;
             controls->ALUSrc = 1;
             break;
         case 0b001010: // set less than immediate *
             controls->ALUOp = 0b010;
+            controls->RegWrite = 1;
             controls->ALUSrc = 1;
             break;
         case 0b001011: // sltiu *
             controls->ALUOp = 0b011;
+            controls->RegWrite = 1;
             controls->ALUSrc = 1;
             break;
         case 0b001111: // load upper immediately *
-            controls->MemtoReg = 1;
-            controls->MemRead = 1;
+            controls->ALUOp = 0b110;
+            controls->RegWrite = 1;
+            controls->ALUSrc = 1;
             break;
         case 0b100011: // load word *
+            controls->ALUOp = 0b000; // we have to add the offset to the original location
             controls->MemRead = 1;
+            controls->MemtoReg = 1;
+            controls->ALUSrc = 1;
             break;
         case 0b101011: // store word *
+            controls->ALUOp = 0b000;
             controls->MemWrite = 1;
+            controls->ALUSrc = 1;
             break;
         default:
             return 1;
@@ -116,8 +139,8 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 {
     *extended_value = offset;
 
-    if ((offset & 0x8000 )== 0x8000) {
-      *extended_value |= 0xFFFF0000;
+    if ((offset & 0x8000) == 0x8000) {
+        *extended_value |= 0xFFFF0000;
     }
 }
 
@@ -127,6 +150,8 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 {
     if (ALUSrc == 1) {
         ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+    } else if (ALUSrc == 2) {
+        ALU(data1, data2, ALUOp, ALUresult, Zero);
     } else if (ALUOp == 0b111) {
         switch (funct) {
             case 0b100000: // add
@@ -150,7 +175,7 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
             default:
                 return 1;
         }
-    } else {
+    } else if (ALUOp != 0b000) {
         return 1;
     }
 
@@ -161,7 +186,8 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
-    if (ALUresult >> 2 > MEMSIZE - 1) {
+    // if reading/writing, make sure addr is in range and is word-aligned
+    if ((MemRead == 1 || MemWrite == 1) && (((ALUresult >> 2) > (MEMSIZE - 1)) || (ALUresult >> 2 % 4 != 0))) {
         return 1;
     }
 
@@ -203,12 +229,15 @@ void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
     if (Jump == 1) {
-        *PC = jsec;
+        unsigned addr = (jsec << 2);
+        addr &= 0x0FFFFFFF;
+        addr |= (*PC & 0xF0000000);
+        *PC = addr;
     } else if (Branch == 1) {
         if (Zero == 1) {
-            *PC = extended_value;
+            *PC = *PC + 4 + (extended_value << 2);
         }
     } else {
-        *PC++;
+        *PC += 4;
     }
 }
